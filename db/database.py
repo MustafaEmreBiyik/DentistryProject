@@ -88,6 +88,25 @@ class ChatLog(Base):
         return f"<ChatLog(id={self.id}, session_id={self.session_id}, role={self.role})>"
 
 
+class FeedbackLog(Base):
+    """
+    Öğrenci Geri Bildirim Tablosu
+    ----------------------------
+    Öğrencilerin oturum sonunda verdikleri geri bildirimleri saklar.
+    Akademik makale için nitel veri toplama.
+    """
+    __tablename__ = "feedback_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("student_sessions.id"), nullable=False)  # Hangi oturuma ait
+    rating = Column(Integer, nullable=False)  # 1-5 yıldız memnuniyet puanı
+    comment = Column(Text, nullable=True)  # Öğrenci yorumları (opsiyonel)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)  # Geri bildirim zamanı
+
+    def __repr__(self):
+        return f"<FeedbackLog(id={self.id}, session_id={self.session_id}, rating={self.rating})>"
+
+
 # ==================== VERİTABANI FONKSİYONLARI ====================
 
 def init_db():
