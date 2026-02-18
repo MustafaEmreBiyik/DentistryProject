@@ -1,24 +1,38 @@
 """
 DentAI Database Setup
 =====================
-SQLAlchemy modelleri ve veritabanı konfigürasyonu.
-Streamlit uygulaması için SQLite kullanır.
+SQLAlchemy models and database configuration.
+Supports SQLite (Local) and PostgreSQL (Production).
 """
 
+import os
 import datetime
 from sqlalchemy import create_engine, Column, Integer, String, Text, Float, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 # ==================== VERİTABANI KONFIGÜRASYONU ====================
 
-# SQLite veritabanı URL'i (proje kök dizininde oluşturulacak)
-DATABASE_URL = "sqlite:///./dentai_app.db"
+# Environment variable'dan DB URL'i al. Yoksa default SQLite kullan.
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Engine oluştur (Streamlit için check_same_thread=False kritik!)
+if DATABASE_URL:
+    # Render/Heroku gibi platformlar 'postgres://' verebilir, SQLAlchemy için 'postgresql://' olmalı
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    
+    # PostgreSQL için connect_args gerekmez (veya SSL vs için gerekebilir)
+    engine_kwargs = {}
+else:
+    # Lokal geliştirme için SQLite
+    DATABASE_URL = "sqlite:///./dentai_app.db"
+    # Streamlit + SQLite için check_same_thread=False kritik!
+    engine_kwargs = {"connect_args": {"check_same_thread": False}}
+
+# Engine oluştur
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    echo=False  # True yaparsanız SQL sorgularını görebilirsiniz (debug için)
+    echo=False,  # True yaparsanız SQL sorgularını görebilirsiniz (debug için)
+    **engine_kwargs
 )
 
 # Session factory (her veritabanı işlemi için yeni session)
@@ -72,6 +86,25 @@ class ChatLog(Base):
 
     def __repr__(self):
         return f"<ChatLog(id={self.id}, session_id={self.session_id}, role={self.role})>"
+
+
+class FeedbackLog(Base):
+    """
+    Öğrenci Geri Bildirim Tablosu
+    ----------------------------
+    Öğrencilerin oturum sonunda verdikleri geri bildirimleri saklar.
+    Akademik makale için nitel veri toplama.
+    """
+    __tablename__ = "feedback_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("student_sessions.id"), nullable=False)  # Hangi oturuma ait
+    rating = Column(Integer, nullable=False)  # 1-5 yıldız memnuniyet puanı
+    comment = Column(Text, nullable=True)  # Öğrenci yorumları (opsiyonel)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)  # Geri bildirim zamanı
+
+    def __repr__(self):
+        return f"<FeedbackLog(id={self.id}, session_id={self.session_id}, rating={self.rating})>"
 
 
 # ==================== VERİTABANI FONKSİYONLARI ====================
