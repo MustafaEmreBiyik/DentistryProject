@@ -12,8 +12,13 @@ from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 # ==================== VERİTABANI KONFIGÜRASYONU ====================
 
-# Environment variable'dan DB URL'i al. Yoksa default SQLite kullan.
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Streamlit Cloud için st.secrets'dan oku, yoksa environment variable'dan al
+try:
+    import streamlit as st
+    DATABASE_URL = st.secrets.get("DATABASE_URL", os.getenv("DATABASE_URL"))
+except (ImportError, FileNotFoundError, AttributeError):
+    # Streamlit yoksa veya secrets.toml yoksa, environment variable kullan
+    DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
     # Render/Heroku gibi platformlar 'postgres://' verebilir, SQLAlchemy için 'postgresql://' olmalı
