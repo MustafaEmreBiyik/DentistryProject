@@ -37,7 +37,7 @@ dentai_app.db
 *.db
 
 
-*md
+*.md
 
 # Streamlit secrets
 .streamlit/secrets.toml
