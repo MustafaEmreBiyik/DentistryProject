@@ -7,7 +7,7 @@ Supports SQLite (Local) and PostgreSQL (Production).
 
 import os
 import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, Float, DateTime, JSON, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Text, Float, DateTime, JSON, ForeignKey, text
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 # ==================== VERİTABANI KONFIGÜRASYONU ====================
@@ -135,7 +135,7 @@ def init_db():
         
         # Bağlantı test et
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         
         # Tabloları oluştur (varsa atlayacak)
         Base.metadata.create_all(bind=engine)
