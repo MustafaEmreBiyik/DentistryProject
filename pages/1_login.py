@@ -218,9 +218,38 @@ if submitted:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# Yeni Kullanıcı Ekle butonu — formun hemen altında
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if st.button("📝 Yeni Kullanıcı Ekle", use_container_width=True):
+        st.session_state["show_register"] = not st.session_state.get("show_register", False)
+
+# Kayıt formu — toggle ile gösterilir/gizlenir
+if st.session_state.get("show_register", False):
+    st.divider()
+    st.markdown("### 📝 Yeni Hesap Oluştur")
+    reg_name = st.text_input("Adınız Soyadınız:", key="new_name", placeholder="Örn: Ahmet Yılmaz")
+    reg_id = st.text_input("Öğrenci Numaranız:", key="new_id", placeholder="Örn: 220601026")
+    col_r1, col_r2, col_r3 = st.columns([1, 2, 1])
+    with col_r2:
+        if st.button("✅ Kayıt Ol", key="register_btn", type="primary", use_container_width=True):
+            if reg_name and reg_id:
+                prof_dict = load_profiles()
+                if reg_id in prof_dict:
+                    st.error("❌ Bu öğrenci numarası zaten kayıtlı. Lütfen giriş yapın.")
+                else:
+                    profile = create_profile(reg_name, reg_id)
+                    user_info = {
+                        "student_id": profile.get("student_id", reg_id),
+                        "name": profile.get("name", reg_name),
+                        "email": profile.get("email", f"{reg_id}@istun.edu.tr"),
+                        "role": profile.get("role", "Öğrenci")
+                    }
+                    login_user(user_info)
+            else:
+                st.warning("⚠️ Lütfen tüm alanları doldurun.")
+
 st.divider()
-
-
 
 # Additional Info
 with st.expander("❓ Şifremi Unuttum"):
@@ -229,31 +258,6 @@ with st.expander("❓ Şifremi Unuttum"):
     
     📧 E-posta: betul.danismaz@istun.edu.tr
     """)
-
-with st.expander("📝 Yeni Hesap Oluştur"):
-    st.markdown("**Yeni Hesap Oluşturun**")
-    new_name = st.text_input("Adınız Soyadınız:", key="new_name", placeholder="Örn: Ahmet Yılmaz")
-    new_id = st.text_input("Öğrenci Numaranız:", key="new_id", placeholder="Örn: 220601026")
-
-    if st.button("Kayıt Ol", key="register_btn", type="primary", use_container_width=True):
-        if new_name and new_id:
-            profiles = load_profiles()
-            if new_id in profiles:
-                st.error("❌ Bu öğrenci numarası zaten kayıtlı. Lütfen giriş yapın.")
-            else:
-                profile = create_profile(new_name, new_id)
-
-                user_info = {
-                    "student_id": profile.get("student_id", new_id),
-                    "name": profile.get("name", new_name),
-                    "email": profile.get("email", f"{new_id}@istun.edu.tr"),
-                    "role": profile.get("role", "Öğrenci")
-                }
-
-                # Use existing login flow to set session and redirect
-                login_user(user_info)
-        else:
-            st.warning("⚠️ Lütfen tüm alanları doldurun.")
 
 st.divider()
 
