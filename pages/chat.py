@@ -285,6 +285,63 @@ def main() -> None:
                 placeholder.markdown(error_text)
                 st.session_state.messages.append({"role": "assistant", "content": error_text})
 
+    # ==================== FEEDBACK COLLECTION ====================
+    # Show feedback form after meaningful conversation (10+ messages)
+    if len(st.session_state.messages) >= 10:
+        if "feedback_submitted" not in st.session_state or not st.session_state.feedback_submitted:
+            st.divider()
+            st.markdown("### 📝 Oturumu Değerlendirin")
+            st.caption("Geri bildiriminiz araştırmamız için çok değerlidir.")
+            
+            with st.form("feedback_form", clear_on_submit=True):
+                col_rating, col_comment = st.columns([1, 2])
+                
+                with col_rating:
+                    rating = st.slider(
+                        "Genel Memnuniyet",
+                        min_value=1,
+                        max_value=5,
+                        value=3,
+                        help="1 = Çok Kötü, 5 = Mükemmel"
+                    )
+                    st.caption("⭐" * rating)
+                
+                with col_comment:
+                    comment = st.text_area(
+                        "Yorumlarınız (Opsiyonel)",
+                        placeholder="Bu deneyim hakkında düşüncelerinizi paylaşın...",
+                        height=100
+                    )
+                
+                submitted = st.form_submit_button("📤 Gönder", type="primary")
+                
+                if submitted:
+                    # Save feedback to database
+                    db = SessionLocal()
+                    try:
+                        from db.database import FeedbackLog
+                        
+                        feedback = FeedbackLog(
+                            session_id=st.session_state.db_session_id,
+                            rating=rating,
+                            comment=comment if comment.strip() else None,
+                            timestamp=datetime.utcnow()
+                        )
+                        db.add(feedback)
+                        db.commit()
+                        
+                        st.session_state.feedback_submitted = True
+                        st.success("✅ Teşekkürler! Geri bildiriminiz kaydedildi. 🎉")
+                        st.balloons()
+                        
+                        LOGGER.info(f"Feedback saved: Session {st.session_state.db_session_id}, Rating: {rating}")
+                    except Exception as e:
+                        LOGGER.error(f"Failed to save feedback: {e}")
+                        st.error("⚠️ Geri bildirim kaydedilemedi.")
+                        db.rollback()
+                    finally:
+                        db.close()
+
 
 if __name__ == "__main__":
     main()

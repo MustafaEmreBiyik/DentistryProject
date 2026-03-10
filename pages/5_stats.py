@@ -204,6 +204,85 @@ if action_history:
         hide_index=True
     )
     
+    # ==================== CSV EXPORT FOR RESEARCHERS ====================
+    st.markdown("---")
+    st.markdown("### 📥 Araştırmacılar İçin Veri İndirme")
+    
+    col_exp1, col_exp2 = st.columns(2)
+    
+    with col_exp1:
+        # Export action history
+        csv_actions = df.to_csv(index=False, encoding='utf-8-sig')
+        st.download_button(
+            label="📊 Eylem Geçmişi (CSV)",
+            data=csv_actions,
+            file_name=f"dental_tutor_actions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+            type="primary",
+            help="Tüm öğrenci eylemleri ve puanları"
+        )
+    
+    with col_exp2:
+        # Export detailed chat logs (for paper analysis)
+        try:
+            from db.database import SessionLocal, ChatLog, StudentSession
+            
+            db = SessionLocal()
+            detailed_logs = []
+            
+            # Query ALL chat logs with session info (for pilot study - all students)
+            logs = db.query(
+                ChatLog.id,
+                ChatLog.session_id,
+                StudentSession.student_id,
+                StudentSession.case_id,
+                ChatLog.role,
+                ChatLog.content,
+                ChatLog.timestamp,
+                ChatLog.metadata_json
+            ).join(StudentSession).order_by(ChatLog.timestamp).all()
+            
+            for log in logs:
+                log_dict = {
+                    'chat_id': log[0],
+                    'session_id': log[1],
+                    'student_id': log[2],
+                    'case_id': log[3],
+                    'role': log[4],
+                    'content': log[5][:200] + '...' if len(log[5]) > 200 else log[5],  # Truncate long messages
+                    'timestamp': log[6].strftime('%Y-%m-%d %H:%M:%S') if log[6] else 'N/A'
+                }
+                
+                # Extract metadata if available
+                if log[7]:
+                    metadata = log[7] if isinstance(log[7], dict) else json.loads(log[7])
+                    log_dict['action'] = metadata.get('interpreted_action', '')
+                    log_dict['score'] = metadata.get('assessment', {}).get('score', 0)
+                    log_dict['clinically_accurate'] = metadata.get('silent_evaluation', {}).get('is_clinically_accurate', 'N/A')
+                else:
+                    log_dict['action'] = ''
+                    log_dict['score'] = 0
+                    log_dict['clinically_accurate'] = 'N/A'
+                
+                detailed_logs.append(log_dict)
+            
+            db.close()
+            
+            if detailed_logs:
+                df_detailed = pd.DataFrame(detailed_logs)
+                csv_detailed = df_detailed.to_csv(index=False, encoding='utf-8-sig')
+                
+                st.download_button(
+                    label="📝 Detaylı Chat Logları (CSV)",
+                    data=csv_detailed,
+                    file_name=f"dental_tutor_chatlogs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    type="secondary",
+                    help="Tam konuşma geçmişi ve değerlendirmeler"
+                )
+        except Exception as e:
+            st.warning(f"Detaylı log export hatası: {e}")
+    
     st.markdown("---")
     
     # Charts
