@@ -17,9 +17,21 @@ from app.frontend.components import render_sidebar
 from db.database import SessionLocal, StudentSession, ChatLog, init_db
 import json
 
-# Initialize systems
-init_db()
-init_student_profile()
+# Initialize systems safely (don't let DB errors crash page import)
+db_init_failed = False
+try:
+    init_db()
+    init_student_profile()
+except Exception as e:
+    db_init_failed = True
+    try:
+        st.warning(f"⚠️ Veritabanına bağlanılamadı; istatistikler devre dışı. Hata: {e}")
+    except Exception:
+        # If streamlit isn't available for some reason, silently continue
+        pass
+
+# expose flag to session state so other functions can skip DB usage
+st.session_state.setdefault("db_init_failed", db_init_failed)
 
 # Page config
 st.set_page_config(
@@ -83,7 +95,16 @@ def get_user_statistics():
     """Get user statistics from database"""
     user_info = st.session_state.get("user_info") or {}
     student_id = user_info.get("student_id", "web_user_default")
-    
+    # If DB init failed during import, skip DB access and return zeros
+    if st.session_state.get("db_init_failed"):
+        return {
+            "total_sessions": 0,
+            "completed_cases": 0,
+            "total_actions": 0,
+            "total_score": 0,
+            "average_score": 0
+        }
+
     db = SessionLocal()
     try:
         # Get all sessions for this student
