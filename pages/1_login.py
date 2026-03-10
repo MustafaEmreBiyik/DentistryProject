@@ -15,6 +15,7 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 from app.frontend.components import render_sidebar
+from app.student_profile import load_profiles, create_profile
 
 # Page config
 st.set_page_config(
@@ -226,16 +227,33 @@ with st.expander("❓ Şifremi Unuttum"):
     st.info("""
     Şifrenizi sıfırlamak için lütfen sistem yöneticinize başvurun.
     
-    📧 E-posta: support@dentaltutor.ai  
-    📞 Telefon: +90 (XXX) XXX XX XX
+    📧 E-posta: betul.danismaz@istun.edu.tr
     """)
 
 with st.expander("📝 Yeni Hesap Oluştur"):
-    st.info("""
-    Yeni hesap oluşturmak için kayıt formunu doldurmanız gerekmektedir.
-    
-    🔗 [Kayıt Formuna Git](#) (Yakında aktif olacak)
-    """)
+    st.markdown("**Yeni Hesap Oluşturun**")
+    new_name = st.text_input("Adınız Soyadınız:", key="new_name", placeholder="Örn: Ahmet Yılmaz")
+    new_id = st.text_input("Öğrenci Numaranız:", key="new_id", placeholder="Örn: 220601026")
+
+    if st.button("Kayıt Ol", key="register_btn", type="primary", use_container_width=True):
+        if new_name and new_id:
+            profiles = load_profiles()
+            if new_id in profiles:
+                st.error("❌ Bu öğrenci numarası zaten kayıtlı. Lütfen giriş yapın.")
+            else:
+                profile = create_profile(new_name, new_id)
+
+                user_info = {
+                    "student_id": profile.get("student_id", new_id),
+                    "name": profile.get("name", new_name),
+                    "email": profile.get("email", f"{new_id}@istun.edu.tr"),
+                    "role": profile.get("role", "Öğrenci")
+                }
+
+                # Use existing login flow to set session and redirect
+                login_user(user_info)
+        else:
+            st.warning("⚠️ Lütfen tüm alanları doldurun.")
 
 st.divider()
 
