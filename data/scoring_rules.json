@@ -6,6 +6,15 @@
         "target_action": "check_allergies_meds",
         "score": 15,
         "rule_outcome": "Anamnez tamamlandı."
+      },
+      {
+        "target_action": "perform_oral_exam",
+        "score": 20,
+        "rule_outcome": "Oral mukoza muayenesi yapıldı. Bilateral bukkal mukozada retikular beyaz çizgiler (Wickham striae) görüldü.",
+        "state_updates": {
+          "score_change": 20,
+          "revealed_findings": ["bulgu_001"]
+        }
       }
     ]
   },
@@ -59,6 +68,15 @@
         "score": 10,
         "rule_outcome": "İlaç ve Alerji (Penisilin) sorgulandı.",
         "state_updates": { "score_change": 10 }
+      },
+      {
+        "target_action": "perform_oral_exam",
+        "score": 15,
+        "rule_outcome": "Oral muayene yapıldı. Dişetlerinde kanama ve kızarıklık tespit edildi.",
+        "state_updates": {
+          "score_change": 15,
+          "revealed_findings": ["bleeding_risk"]
+        }
       }
     ]
   },
@@ -104,8 +122,67 @@
     ]
   },
   {
+    "case_id": "infectious_child_01",
+    "rules": [
+      {
+        "target_action": "perform_oral_exam",
+        "score": 10,
+        "rule_outcome": "Oral muayene yapıldı. Dişetlerinde yaygın eritem/ödem ve rüptüre vezikül izleri görüldü.",
+        "state_updates": {
+          "score_change": 10,
+          "revealed_findings": ["clinical_appearance"]
+        }
+      },
+      {
+        "target_action": "check_fever",
+        "score": 20,
+        "rule_outcome": "KRİTİK: Ateş ve sistemik belirti kontrolü yapıldı (pediatrik viral enfeksiyonda risk değerlendirmesi).",
+        "state_updates": { "score_change": 20 }
+      },
+      {
+        "target_action": "check_vital_signs",
+        "score": 20,
+        "rule_outcome": "KRİTİK: Ateş ve sistemik belirti kontrolü yapıldı (pediatrik viral enfeksiyonda risk değerlendirmesi).",
+        "state_updates": { "score_change": 20 }
+      },
+      {
+        "target_action": "ask_hydration_nutrition",
+        "score": 20,
+        "rule_outcome": "Uzman İçgörü: Beslenme/yutkunma ve sıvı alımı sorgulandı (dehidratasyon riski).",
+        "state_updates": { "score_change": 20 }
+      },
+      {
+        "target_action": "prescribe_antibiotics",
+        "score": -20,
+        "rule_outcome": "CEZA: Viral enfeksiyonda antibiyotik verilmemelidir!",
+        "state_updates": { "score_change": -20 }
+      },
+      {
+        "target_action": "diagnose_primary_herpes",
+        "score": 40,
+        "rule_outcome": "Doğru Tanı: Primer Herpetik Gingivostomatitis.",
+        "state_updates": { "score_change": 40 }
+      },
+      {
+        "target_action": "diagnose_herpetic_gingivostomatitis",
+        "score": 40,
+        "rule_outcome": "Doğru Tanı: Primer Herpetik Gingivostomatitis.",
+        "state_updates": { "score_change": 40 }
+      }
+    ]
+  },
+  {
     "case_id": "behcet_01",
     "rules": [
+      {
+        "target_action": "perform_oral_exam",
+        "score": 15,
+        "rule_outcome": "Oral muayene yapıldı. Ağızda tekrarlayan aftöz ülserler görüldü.",
+        "state_updates": {
+          "score_change": 15,
+          "revealed_findings": ["genital_ulcer"]
+        }
+      },
       {
         "target_action": "ask_systemic_symptoms",
         "score": 20,
@@ -164,47 +241,35 @@
       {
         "target_action": "perform_oral_exam",
         "score": 10,
-        "rule_outcome": "Yapışık dişetinde yaygın eritem ve soyulmalar tespit edildi.",
+        "rule_outcome": "Yapışık dişetinde yaygın eritem ve soyulmalar görüldü.",
         "state_updates": {
           "score_change": 10,
-          "revealed_findings": ["clinical_appearance"]
+          "revealed_findings": ["clinical_erythema"]
         }
       },
       {
         "target_action": "perform_nikolsky_test",
         "score": 25,
-        "rule_outcome": "KRİTİK MANİPÜLASYON: Nikolsky Testi (+) - Otoimmün büllöz hastalık şüphesi.",
+        "rule_outcome": "KRİTİK BULGU: Nikolsky (+) - Epitel sıyrılması pozitif.",
         "state_updates": {
           "score_change": 25,
-          "revealed_findings": ["nikolsky_sign"]
+          "revealed_findings": ["nikolsky_positive"]
         }
-      },
-      {
-        "target_action": "request_biopsy_he",
-        "score": 15,
-        "rule_outcome": "Biyopsi istendi (H&E ile subepitelyal ayrılma izlenir).",
-        "state_updates": { "score_change": 15 }
       },
       {
         "target_action": "request_dif_biopsy",
         "score": 30,
-        "rule_outcome": "ALTIN STANDART TEST: Direkt İmmünofloresan (DIF) istendi - Bazal membran IgG/C3 birikimi pozitif.",
+        "rule_outcome": "ALTIN STANDART: DIF İncelemesi - Bazal membran zonunda lineer IgG ve C3.",
         "state_updates": {
           "score_change": 30,
-          "revealed_findings": ["dif_finding"]
+          "revealed_findings": ["biopsy_dif_result"]
         }
       },
       {
         "target_action": "diagnose_mucous_membrane_pemphigoid",
         "score": 40,
-        "rule_outcome": "DOĞRU TANI: Müköz Membran Pemfigoidi (Deskuamatif gingivitisin en yaygın nedeni).",
+        "rule_outcome": "Doğru Tanı: Müköz Membran Pemfigoidi.",
         "state_updates": { "score_change": 40 }
-      },
-      {
-        "target_action": "diagnose_plaque_gingivitis",
-        "score": -20,
-        "rule_outcome": "YANLIŞ TANI: Plak gingiviti gibi görünse de otoimmün büllöz hastalık ayırt edilemedi.",
-        "state_updates": { "score_change": -20 }
       }
     ]
   }

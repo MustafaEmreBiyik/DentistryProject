@@ -397,10 +397,12 @@ HASTA OLARAK YANIT VER (Kısa, doğal, Türkçe):"""
             interpretation = {"intent_type": "CHAT", "interpreted_action": "patient_conversation"}
             assessment = {}
             silent_evaluation = {}
+            scoring_interpretation: Dict[str, Any] = {}
             
             # Try to evaluate in background (non-blocking)
             try:
                 interpretation_bg = self.interpret_action(raw_action, state)
+                scoring_interpretation = interpretation_bg or {}
                 assessment = self.assessment_engine.evaluate_action(case_id, interpretation_bg) or {}
                 silent_evaluation = self._silent_evaluation(raw_action, interpretation_bg.get("interpreted_action", ""), state)
                 
@@ -417,6 +419,8 @@ HASTA OLARAK YANIT VER (Kısa, doğal, Türkçe):"""
                 "student_id": student_id,
                 "case_id": case_id,
                 "llm_interpretation": {"explanatory_feedback": patient_response, **interpretation},
+                "scoring_interpretation": scoring_interpretation,
+                "scoring_action": scoring_interpretation.get("interpreted_action"),
                 "assessment": assessment,
                 "silent_evaluation": silent_evaluation,
                 "final_feedback": patient_response,  # Patient's natural response

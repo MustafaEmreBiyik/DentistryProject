@@ -258,8 +258,14 @@ def main() -> None:
                 
                 # ==================== SILENT SAVE ====================
                 # Save evaluation to database WITHOUT showing it to the user
+                interpreted_action_for_log = (
+                    result.get("scoring_action")
+                    or result.get("scoring_interpretation", {}).get("interpreted_action")
+                    or result.get("llm_interpretation", {}).get("interpreted_action")
+                )
+
                 evaluation_metadata = {
-                    "interpreted_action": result.get("llm_interpretation", {}).get("interpreted_action"),
+                    "interpreted_action": interpreted_action_for_log,
                     "assessment": result.get("assessment", {}),
                     "silent_evaluation": result.get("silent_evaluation", {}),
                     "timestamp": datetime.utcnow().isoformat(),
