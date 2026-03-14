@@ -14,14 +14,27 @@ from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 # Environment variable'dan DB URL'i al. Yoksa default SQLite kullan.
 DATABASE_URL = os.getenv("DATABASE_URL")
+PG_HOSTADDR = os.getenv("PGHOSTADDR")
 
 if DATABASE_URL:
     # Render/Heroku gibi platformlar 'postgres://' verebilir, SQLAlchemy için 'postgresql://' olmalı
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    
-    # PostgreSQL için connect_args gerekmez (veya SSL vs için gerekebilir)
-    engine_kwargs = {}
+
+    # PostgreSQL için güvenli ve stabil bağlantı ayarları (Streamlit Cloud uyumlu)
+    # sslmode varsa URL'de tanımlı olabilir, yoksa require ile zorla
+    connect_args = {"sslmode": "require"}
+    if PG_HOSTADDR:
+        # IPv4'e zorlamak için hostaddr kullan
+        connect_args["hostaddr"] = PG_HOSTADDR
+
+    engine_kwargs = {
+        "connect_args": connect_args,
+        "pool_size": 2,
+        "max_overflow": 0,
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
 else:
     # Lokal geliştirme için SQLite
     DATABASE_URL = "sqlite:///./dentai_app.db"
