@@ -16,6 +16,19 @@ from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 DATABASE_URL = os.getenv("DATABASE_URL")
 PG_HOSTADDR = os.getenv("PGHOSTADDR")
 
+# Streamlit Cloud secrets fallback (if env vars not injected)
+if not DATABASE_URL:
+    try:
+        import streamlit as st
+
+        if hasattr(st, "secrets"):
+            DATABASE_URL = st.secrets.get("DATABASE_URL")
+            if not PG_HOSTADDR:
+                PG_HOSTADDR = st.secrets.get("PGHOSTADDR")
+    except Exception:
+        # Keep silent: non-Streamlit contexts should not fail here
+        pass
+
 if DATABASE_URL:
     # Render/Heroku gibi platformlar 'postgres://' verebilir, SQLAlchemy için 'postgresql://' olmalı
     if DATABASE_URL.startswith("postgres://"):
