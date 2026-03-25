@@ -7,7 +7,7 @@ Supports SQLite (Local) and PostgreSQL (Production).
 
 import os
 import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, Float, DateTime, JSON, ForeignKey, text
+from sqlalchemy import create_engine, Column, Integer, String, Text, Float, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 # ==================== VERİTABANI KONFIGÜRASYONU ====================
@@ -28,13 +28,6 @@ if not DATABASE_URL:
     except Exception:
         # Keep silent: non-Streamlit contexts should not fail here
         pass
-# Streamlit Cloud için st.secrets'dan oku, yoksa environment variable'dan al
-try:
-    import streamlit as st
-    DATABASE_URL = st.secrets.get("DATABASE_URL", os.getenv("DATABASE_URL"))
-except (ImportError, FileNotFoundError, AttributeError):
-    # Streamlit yoksa veya secrets.toml yoksa, environment variable kullan
-    DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
     # Render/Heroku gibi platformlar 'postgres://' verebilir, SQLAlchemy için 'postgresql://' olmalı
@@ -54,18 +47,6 @@ if DATABASE_URL:
         "max_overflow": 0,
         "pool_recycle": 300,
         "pool_pre_ping": True,
-    
-    # PostgreSQL için Supabase connection settings
-    # Streamlit Cloud için SSL ve connection pooling ayarları
-    engine_kwargs = {
-        "pool_pre_ping": True,  # Bağlantıyı kullanmadan önce test et
-        "pool_recycle": 300,  # 5 dakikada bir bağlantıları yenile
-        "pool_size": 5,  # Connection pool boyutu
-        "max_overflow": 2,  # Ekstra bağlantı limiti
-        "connect_args": {
-            "connect_timeout": 10,  # 10 saniye bağlantı timeout'u
-            "sslmode": "require",  # Supabase için SSL gerekli
-        }
     }
 else:
     # Lokal geliştirme için SQLite
@@ -184,40 +165,7 @@ def init_db():
     Veritabanını başlat (tüm tabloları oluştur).
     Uygulama ilk çalıştırıldığında çağrılmalı.
     """
-    try:
-        # Streamlit Cloud için: Bağlantıyı test et
-        import streamlit as st
-        
-        # Bağlantı test et
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        
-        # Tabloları oluştur (varsa atlayacak)
-        Base.metadata.create_all(bind=engine)
-        
-    except ImportError:
-        # Streamlit yoksa (lokal geliştirme), normal oluştur
-        Base.metadata.create_all(bind=engine)
-    except Exception as e:
-        # Streamlit Cloud için hata mesajı
-        try:
-            import streamlit as st
-            st.error(f"""
-            ⚠️ Veritabanı bağlantı hatası!
-            
-            **Olası Çözümler:**
-            1. Streamlit Cloud ayarlarından 'Secrets' bölümüne `DATABASE_URL` ekleyin
-            2. Supabase veritabanınızın aktif olduğundan emin olun (free tier pause olabilir)
-            3. Supabase'de Connection Pooler kullanın (port 6543)
-            4. Bağlantı string'inde özel karakterler URL-encoded olmalı
-            
-            **Detaylı hata:** `{str(e)}`
-            """)
-            # Hata fırlat ki kullanıcı görsün
-            raise
-        except ImportError:
-            # Streamlit yoksa exception'ı direkt fırlat
-            raise
+    Base.metadata.create_all(bind=engine)
 
 
 def get_db():
