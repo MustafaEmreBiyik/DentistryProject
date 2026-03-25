@@ -12,6 +12,22 @@ from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 # ==================== VERİTABANI KONFIGÜRASYONU ====================
 
+# Environment variable'dan DB URL'i al. Yoksa default SQLite kullan.
+DATABASE_URL = os.getenv("DATABASE_URL")
+PG_HOSTADDR = os.getenv("PGHOSTADDR")
+
+# Streamlit Cloud secrets fallback (if env vars not injected)
+if not DATABASE_URL:
+    try:
+        import streamlit as st
+
+        if hasattr(st, "secrets"):
+            DATABASE_URL = st.secrets.get("DATABASE_URL")
+            if not PG_HOSTADDR:
+                PG_HOSTADDR = st.secrets.get("PGHOSTADDR")
+    except Exception:
+        # Keep silent: non-Streamlit contexts should not fail here
+        pass
 # Streamlit Cloud için st.secrets'dan oku, yoksa environment variable'dan al
 try:
     import streamlit as st
@@ -24,6 +40,20 @@ if DATABASE_URL:
     # Render/Heroku gibi platformlar 'postgres://' verebilir, SQLAlchemy için 'postgresql://' olmalı
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+    # PostgreSQL için güvenli ve stabil bağlantı ayarları (Streamlit Cloud uyumlu)
+    # sslmode varsa URL'de tanımlı olabilir, yoksa require ile zorla
+    connect_args = {"sslmode": "require"}
+    if PG_HOSTADDR:
+        # IPv4'e zorlamak için hostaddr kullan
+        connect_args["hostaddr"] = PG_HOSTADDR
+
+    engine_kwargs = {
+        "connect_args": connect_args,
+        "pool_size": 2,
+        "max_overflow": 0,
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
     
     # PostgreSQL için Supabase connection settings
     # Streamlit Cloud için SSL ve connection pooling ayarları
@@ -120,6 +150,31 @@ class FeedbackLog(Base):
 
     def __repr__(self):
         return f"<FeedbackLog(id={self.id}, session_id={self.session_id}, rating={self.rating})>"
+
+
+class SystemMetricLog(Base):
+    """
+    Sistem Metrik Log Tablosu
+    -------------------------
+    Pilot çalışması için operasyonel metrikleri otomatik kaydeder.
+    Örn: API yanıt süresi, görev tamamlama olayı, DB yazım gecikmesi,
+    reasoning deviation durumu.
+    """
+    __tablename__ = "system_metric_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("student_sessions.id"), nullable=True, index=True)
+    metric_name = Column(String, nullable=False, index=True)
+    metric_value = Column(Float, nullable=True)
+    status = Column(String, nullable=True)
+    metadata_json = Column(JSON, nullable=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+    def __repr__(self):
+        return (
+            f"<SystemMetricLog(id={self.id}, metric_name={self.metric_name}, "
+            f"session_id={self.session_id}, status={self.status})>"
+        )
 
 
 # ==================== VERİTABANI FONKSİYONLARI ====================
