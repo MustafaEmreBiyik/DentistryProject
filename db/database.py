@@ -133,6 +133,31 @@ class FeedbackLog(Base):
         return f"<FeedbackLog(id={self.id}, session_id={self.session_id}, rating={self.rating})>"
 
 
+class SystemMetricLog(Base):
+    """
+    Sistem Metrik Log Tablosu
+    -------------------------
+    Pilot çalışması için operasyonel metrikleri otomatik kaydeder.
+    Örn: API yanıt süresi, görev tamamlama olayı, DB yazım gecikmesi,
+    reasoning deviation durumu.
+    """
+    __tablename__ = "system_metric_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("student_sessions.id"), nullable=True, index=True)
+    metric_name = Column(String, nullable=False, index=True)
+    metric_value = Column(Float, nullable=True)
+    status = Column(String, nullable=True)
+    metadata_json = Column(JSON, nullable=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+    def __repr__(self):
+        return (
+            f"<SystemMetricLog(id={self.id}, metric_name={self.metric_name}, "
+            f"session_id={self.session_id}, status={self.status})>"
+        )
+
+
 # ==================== VERİTABANI FONKSİYONLARI ====================
 
 def init_db():
