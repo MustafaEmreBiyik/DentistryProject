@@ -126,25 +126,32 @@ def show_login_form():
         st.markdown("**Yeni Hesap Oluşturun**")
         new_name = st.text_input("Adınız Soyadınız:", key="new_name", placeholder="Örn: Ahmet Yılmaz")
         new_id = st.text_input("Öğrenci Numaranız:", key="new_id", placeholder="Örn: 2021001")
-        
+        new_password = st.text_input("Şifre:", key="new_password", type="password", placeholder="Şifrenizi belirleyin")
+        new_password_confirm = st.text_input("Şifre Tekrar:", key="new_password_confirm", type="password", placeholder="Şifrenizi tekrar girin")
+
         if st.button("Kayıt Ol", type="primary", width="stretch"):
-            if new_name and new_id:
-                profiles = load_profiles()
-                if new_id in profiles:
-                    st.error("❌ Bu öğrenci numarası zaten kayıtlı. Lütfen giriş yapın.")
+            if new_name and new_id and new_password and new_password_confirm:
+                if new_password != new_password_confirm:
+                    st.error("❌ Şifreler eşleşmiyor. Lütfen tekrar deneyin.")
+                elif len(new_password) < 4:
+                    st.warning("⚠️ Şifre en az 4 karakter olmalıdır.")
                 else:
-                    profile = create_profile(new_name, new_id)
-                    st.session_state.student_profile = profile
-                    st.session_state.is_logged_in = True
-                    
-                    # Initialize session state
-                    st.session_state.total_score = 0
-                    st.session_state.total_actions = 0
-                    st.session_state.completed_cases = set()
-                    st.session_state.action_history = []
-                    
-                    st.success(f"✅ Hesabınız oluşturuldu! Hoş geldiniz, {new_name}!")
-                    st.rerun()
+                    profiles = load_profiles()
+                    if new_id in profiles:
+                        st.error("❌ Bu öğrenci numarası zaten kayıtlı. Lütfen giriş yapın.")
+                    else:
+                        profile = create_profile(new_name, new_id, new_password)
+                        st.session_state.student_profile = profile
+                        st.session_state.is_logged_in = True
+
+                        # Initialize session state
+                        st.session_state.total_score = 0
+                        st.session_state.total_actions = 0
+                        st.session_state.completed_cases = set()
+                        st.session_state.action_history = []
+
+                        st.success(f"✅ Hesabınız oluşturuldu! Hoş geldiniz, {new_name}!")
+                        st.rerun()
             else:
                 st.warning("⚠️ Lütfen tüm alanları doldurun.")
 

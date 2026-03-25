@@ -47,7 +47,6 @@ st.markdown("""
         font-size: 4rem;
         margin-bottom: 1rem;
     }
-    }
     .info-box {
         background: #e7f3ff;
         border-left: 4px solid #2196F3;
