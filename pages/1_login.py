@@ -221,7 +221,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Yeni Kullanıcı Ekle butonu — formun hemen altında
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    if st.button("📝 Yeni Kullanıcı Ekle", use_container_width=True):
+    if st.button("📝 Yeni Hesap Oluştur", use_container_width=True):
         st.session_state["show_register"] = not st.session_state.get("show_register", False)
 
 # Kayıt formu — toggle ile gösterilir/gizlenir
