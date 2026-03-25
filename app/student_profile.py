@@ -34,13 +34,14 @@ def init_student_profile():
     if "is_logged_in" not in st.session_state:
         st.session_state.is_logged_in = False
 
-def create_profile(name, student_id):
+def create_profile(name, student_id, password):
     """Create a new student profile"""
     profiles = load_profiles()
-    
+
     profile = {
         "name": name,
         "student_id": student_id,
+        "password": password,
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "total_score": 0,
@@ -48,7 +49,7 @@ def create_profile(name, student_id):
         "completed_cases": [],
         "action_history": []
     }
-    
+
     profiles[student_id] = profile
     save_profiles(profiles)
     return profile

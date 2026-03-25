@@ -230,22 +230,29 @@ if st.session_state.get("show_register", False):
     st.markdown("### 📝 Yeni Hesap Oluştur")
     reg_name = st.text_input("Adınız Soyadınız:", key="new_name", placeholder="Örn: Ahmet Yılmaz")
     reg_id = st.text_input("Öğrenci Numaranız:", key="new_id", placeholder="Örn: 220601026")
+    reg_password = st.text_input("Şifre:", key="new_password", type="password", placeholder="Şifrenizi belirleyin")
+    reg_password_confirm = st.text_input("Şifre Tekrar:", key="new_password_confirm", type="password", placeholder="Şifrenizi tekrar girin")
     col_r1, col_r2, col_r3 = st.columns([1, 2, 1])
     with col_r2:
         if st.button("✅ Kayıt Ol", key="register_btn", type="primary", use_container_width=True):
-            if reg_name and reg_id:
-                prof_dict = load_profiles()
-                if reg_id in prof_dict:
-                    st.error("❌ Bu öğrenci numarası zaten kayıtlı. Lütfen giriş yapın.")
+            if reg_name and reg_id and reg_password and reg_password_confirm:
+                if reg_password != reg_password_confirm:
+                    st.error("❌ Şifreler eşleşmiyor. Lütfen tekrar deneyin.")
+                elif len(reg_password) < 4:
+                    st.warning("⚠️ Şifre en az 4 karakter olmalıdır.")
                 else:
-                    profile = create_profile(reg_name, reg_id)
-                    user_info = {
-                        "student_id": profile.get("student_id", reg_id),
-                        "name": profile.get("name", reg_name),
-                        "email": profile.get("email", f"{reg_id}@istun.edu.tr"),
-                        "role": profile.get("role", "Öğrenci")
-                    }
-                    login_user(user_info)
+                    prof_dict = load_profiles()
+                    if reg_id in prof_dict:
+                        st.error("❌ Bu öğrenci numarası zaten kayıtlı. Lütfen giriş yapın.")
+                    else:
+                        profile = create_profile(reg_name, reg_id, reg_password)
+                        user_info = {
+                            "student_id": profile.get("student_id", reg_id),
+                            "name": profile.get("name", reg_name),
+                            "email": profile.get("email", f"{reg_id}@istun.edu.tr"),
+                            "role": profile.get("role", "Öğrenci")
+                        }
+                        login_user(user_info)
             else:
                 st.warning("⚠️ Lütfen tüm alanları doldurun.")
 
