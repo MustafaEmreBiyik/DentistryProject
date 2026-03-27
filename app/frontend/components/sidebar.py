@@ -156,6 +156,10 @@ def render_sidebar(
         if page_type != "account":
             if st.button("👤 Hesabım", width="stretch", type="secondary"):
                 st.switch_page("pages/2_account.py")
+
+        if page_type != "feedback":
+            if st.button("🐞 Hata Bildir", width="stretch", type="secondary"):
+                st.switch_page("pages/3_feedback.py")
         
         st.divider()
         
